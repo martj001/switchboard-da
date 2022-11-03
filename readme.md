@@ -16,7 +16,7 @@
 	- Encoder
 		- 4 layer 1-d CNN with ReLU activation and batch normalization
 		- Encode raw waveform into 256 dimensional feature vector
-		- Each feature vector encode ~35ms data, stride is 10ms
+		- Each feature vector encode 28.125ms of data, stride is 10ms
 	- Autoregressive: 1 layer GRU with 128 dimension hidden state
 	- Decoder
 		- 12-head decoder, each head predict 3*n step of future state (encoded waveform from the next 30, 60, 90, ... ms time window)
