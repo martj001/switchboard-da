@@ -20,35 +20,35 @@
 	- Autoregressive: 1 layer GRU with 128 dimension hidden state
 	- Decoder
 		- 12-head decoder, each head predict 3*n step of future state (encoded waveform from the next 30, 60, 90, ... ms time window)
-		- Implemented as 1-d CNN for higher efficiency (avoid loop in python)
-	- Loss: infoNCEloss loss computed on 150 random sampled timesteps 
-	- Negative samples: 16, drawn once from the training batch
+		- Implemented as 1-d CNN for higher efficiency (to avoid loop in python)
+	- Loss: infoNCEloss loss computed on 150 random sampled RNN hidden states
+	- Negative samples: 16, drawn once for each training batch
 - Training
 	- Dataset: Librispeech train-clean-100, train-other-500, totaling 38.4G training data
 	- Batch size: 16
 	- Optimizer: Adam with constant or cyclic exponential decaying learning rate
 - Features extraction
-	- For each speech turn, extract the 20s of waveform before the end_time, and output the last hidden state
+	- For each speech turn, extract the 20s of waveform before the end_time, run Model 1 and output the last hidden state
 
 ## Supervised learning
-- Based on CPC's architecture, replace the Multi-head Decoder by a MLP classification head
+- Based on Model 1, replace the Multi-head Decoder by a MLP classification head
 - Model architecture
 	- Input
 		- Raw waveform + indicator sequence, dimension: [2,8*sample_rate]
-		- Raw waveform contains 8 seconds of audio data, 5 seconds before the end_time and 3 seconds after the end_time
-		- The reason to consider the speech after the end_time is that next turn may contains useful information to classify current turn
-		- Indicator sequence: sequence between start_time and end_time are labeled as 1, the rest is labeled as 0, 
-		- Indicator sequence contains information of which part of the raw waveform to be considered as current turn
-	- Encoder: 
-		- Same as the Model 1 expect added 1 dimension for indicator sequence
-		- Weights on the indicator sequence dimension is fixed/not optimized, their weights are set as 1 and no bias
+		- Raw waveform contains 8 seconds of audio data, 5 seconds before the end_time and 3 seconds after the end_time. The reason to consider the speech after the end_time and possibly before start_time  is that neighborhood speech may contains information on current turn
+		- Indicator sequence: sequence between start_time and end_time are labeled as 1, the rest is labeled as 0
+	- Encoder
+		- Encoder 1: Same as the Model 1
+		- Encoder 2: Encode the indicator sequence. Weights on the indicator sequence dimension is fixed/not optimized, their weights are initialized as 1 and no bias
+		- Output from Encoder 1 and 2 are concatenated and passed to Autoregressive
 	- Autoregressive: 1 layer GRU with 128 dimension hidden state
 	- Decoder: 2 layer 128-dimensional perceptron + 10-class softmax layer
 - Training
 	- Dataset: Switchboard-Dialog Act dataset, filtered by top 10-labels into 81929 rows
-    - Batch size: 32
-    - Optimizer: Adam with constant learning rate
+	- Top 10-labels: [('x', 29998), ('sd', 19364), ('b', 10028), ('sv', 7428), ('+', 4919), ('%', 4294), ('aa', 3014), ('ba', 1112), ('qy', 1043), ('ny', 729)]
+	- Batch size: 32
+	- Optimizer: Adam with constant learning rate
 - Features extraction
 	- For each speech turn, extract the 8s of waveform + indicator sequence as specified in the Model architecture/Input
 	- Run the model and extract the output of the decoder's 2nd layer perceptron
-    
+	
