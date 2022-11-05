@@ -92,7 +92,6 @@ class CLF_Head(nn.Module):
             nn.BatchNorm1d(input_dim),
             nn.ReLU(inplace=True),
             nn.Linear(input_dim, output_dim),
-            nn.Softmax(dim=1),
         )
       
     def forward(self, x):
